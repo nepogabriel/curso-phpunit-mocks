@@ -9,7 +9,9 @@ class Leilao
 {
     private $con;
 
-    public function __construct()
+    public function __construct(
+        // private \PDO $con
+    )
     {
         $this->con = ConnectionCreator::getConnection();
     }
