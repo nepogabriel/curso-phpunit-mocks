@@ -1,7 +1,7 @@
 services:
   php:
     build: .
-    container_name: curso-phpunit-mocks
+    container_name: curso-phpunit-integracao
     ports:
       - "8686:80"
     volumes:
