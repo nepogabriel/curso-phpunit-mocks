@@ -3,8 +3,8 @@
 namespace Alura\Leilao\Tests\Integration\Dao;
 
 use Alura\Leilao\Dao\Leilao as LeilaoDao;
-use Alura\Leilao\Infra\ConnectionCreator;
 use Alura\Leilao\Model\Leilao;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class LeilaoDaoTest extends TestCase
@@ -27,12 +27,15 @@ class LeilaoDaoTest extends TestCase
         self::$pdo->beginTransaction();
     }
 
-    public function testInsercaoEBuscaDevemFuncionar()
+    #[DataProvider('leiloes')]
+    public function testBuscaLeiloesNaoFinalizados(array $leiloes): void
     {
         // arrange
-        $leilao = new Leilao('Variante 0km');
         $leilaoDao = new LeilaoDao(self::$pdo);
-        $leilaoDao->salva($leilao);
+
+        foreach ($leiloes as $leilao) {
+            $leilaoDao->salva($leilao);
+        }
 
         // act
         $leiloes = $leilaoDao->recuperarNaoFinalizados();
@@ -41,10 +44,44 @@ class LeilaoDaoTest extends TestCase
         $this->assertCount(1, $leiloes);
         $this->assertContainsOnlyInstancesOf(Leilao::class, $leiloes);
         $this->assertSame('Variante 0km', $leiloes[0]->recuperarDescricao());
+        $this->assertFalse($leiloes[0]->estaFinalizado());
+    }
+
+    #[DataProvider('leiloes')]
+    public function testBuscaLeiloesFinalizados(array $leiloes): void
+    {
+        // arrange
+        $leilaoDao = new LeilaoDao(self::$pdo);
+
+        foreach ($leiloes as $leilao) {
+            $leilaoDao->salva($leilao);
+        }
+
+        // act
+        $leiloes = $leilaoDao->recuperarFinalizados();
+
+        // assert
+        $this->assertCount(1, $leiloes);
+        $this->assertContainsOnlyInstancesOf(Leilao::class, $leiloes);
+        $this->assertSame('Fiat 147 0km', $leiloes[0]->recuperarDescricao());
+        $this->assertTrue($leiloes[0]->estaFinalizado());
     }
 
     protected function tearDown(): void
     {
         self::$pdo->rollback();
+    }
+
+    public static function leiloes(): array
+    {
+        $leilaoAtivo = new Leilao('Variante 0km');
+        $leilaoFinalizado = new leilao('Fiat 147 0km');
+        $leilaoFinalizado->finaliza();
+
+        $leiloes = [$leilaoAtivo, $leilaoFinalizado];
+
+        return [
+            [$leiloes]
+        ];
     }
 }
