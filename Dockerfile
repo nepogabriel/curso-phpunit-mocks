@@ -19,4 +19,4 @@ COPY . .
 RUN composer dump-autoload
 
 # Comando padrão ao iniciar o container
-CMD ["php", "-a"]
+CMD ["php", "-S", "0.0.0.0:80", "-t", "."]
